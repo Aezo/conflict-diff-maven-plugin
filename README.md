@@ -65,6 +65,27 @@ Add the plugin to your project's `pom.xml`:
 
 ## Usage
 
+### Quick Start for Local Development
+
+After installing the plugin locally, here's how to run your first analysis:
+
+```bash
+# 1. Clone and install the plugin (one-time setup)
+git clone https://github.com/aezo/conflict-diff-maven-plugin.git
+cd conflict-diff-maven-plugin
+mvn clean install
+
+# 2. Navigate to your project
+cd /path/to/your/maven/project
+
+# 3. Run the analysis using full coordinates (recommended for local use)
+mvn com.github.aezo:conflict-diff-maven-plugin:1.0.0-SNAPSHOT:analyze -Dconflict-diff.baseBranch=main
+
+# 4. (Optional) Configure Maven settings for shorter commands
+# Add com.github.aezo to pluginGroups in ~/.m2/settings.xml, then use:
+# mvn conflict-diff:analyze -Dconflict-diff.baseBranch=main
+```
+
 ### Basic Usage
 
 ```bash
@@ -284,6 +305,29 @@ mvn verify
 mvn clean install
 ```
 
+#### Plugin Prefix Not Recognized
+```
+[ERROR] No plugin found for prefix 'conflict-diff' in the current project
+```
+This occurs when Maven cannot resolve the `conflict-diff` prefix. You have two solutions:
+
+**Solution 1**: Use the full plugin coordinates:
+```bash
+mvn com.github.aezo:conflict-diff-maven-plugin:1.0.0-SNAPSHOT:analyze
+```
+
+**Solution 2**: Add the plugin group to your Maven settings (`~/.m2/settings.xml`):
+```xml
+<pluginGroups>
+   <pluginGroup>org.sonarsource.scanner.maven</pluginGroup>
+   <pluginGroup>com.github.aezo</pluginGroup>  <!-- Add this line -->
+</pluginGroups>
+```
+After updating settings.xml, the short prefix will work:
+```bash
+mvn conflict-diff:analyze
+```
+
 #### Git Repository Error
 ```
 [ERROR] Not a git repository (or any of the parent directories)
@@ -306,12 +350,23 @@ mvn dependency:tree  # Test basic dependency resolution
 
 #### Branch Does Not Exist
 ```
+[ERROR] Ref develop cannot be resolved
+```
+```
 [ERROR] Base branch 'develop' does not exist
 ```
-**Solution**: Verify the base branch exists or specify a different one:
+The plugin defaults to comparing against the `develop` branch. If your repository uses a different default branch (like `main` or `master`), you need to specify it:
+
+**Solution**: Specify the correct base branch:
 ```bash
-git branch -a  # List all branches
-mvn conflict-diff:analyze -Dconflict-diff.baseBranch=main  # Use existing branch
+# List all available branches
+git branch -a
+
+# Use full coordinates with correct base branch
+mvn com.github.aezo:conflict-diff-maven-plugin:1.0.0-SNAPSHOT:analyze -Dconflict-diff.baseBranch=main
+
+# Or with short prefix (if configured)
+mvn conflict-diff:analyze -Dconflict-diff.baseBranch=main
 ```
 
 #### Permission Denied
