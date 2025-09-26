@@ -22,8 +22,9 @@ ARGUMENTS:
     BASE_BRANCH Base branch to compare against (defaults to 'develop')
 
 OPTIONS:
-    --help      Show this help message and exit
-    --debug     Enable debug output to see detailed progress
+    --help         Show this help message and exit
+    --debug        Enable debug output to see detailed progress
+    --no-clean-up  Skip cleanup of dependency tree files (requires --debug)
 
 EXAMPLES:
     $(basename "$0")
@@ -34,6 +35,9 @@ EXAMPLES:
     
     $(basename "$0") master --debug
         Compare against 'master' with detailed debug output
+    
+    $(basename "$0") master --debug --no-clean-up
+        Compare against 'master' with debug output and skip cleanup
     
     $(basename "$0") --help
         Show this help message
@@ -93,6 +97,7 @@ list_transitive_dependency_conflicts() {
 
 # Parse command line arguments
 DEBUG=false
+NO_CLEANUP=false
 BASE_BRANCH_ARG=""
 
 while [[ $# -gt 0 ]]; do
@@ -103,6 +108,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --debug)
             DEBUG=true
+            shift
+            ;;
+        --no-clean-up)
+            NO_CLEANUP=true
             shift
             ;;
         --*)
@@ -120,6 +129,12 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# Validate that --no-clean-up is only used with --debug
+if [ "$NO_CLEANUP" = true ] && [ "$DEBUG" = false ]; then
+    echo "❌ --no-clean-up option can only be used with --debug mode" >&2
+    exit 1
+fi
 
 _FEATURE_BRANCH_NAME=$(git branch --show-current)
 _BASE_BRANCH_NAME="${BASE_BRANCH_ARG:-develop}"
@@ -166,38 +181,42 @@ elif [ $_DIFF_EXIT_CODE -eq 2 ]; then
     exit 6
 fi
 
-debug_echo "⏳ Cleaning up"
+if [ "$NO_CLEANUP" = false ]; then
+    debug_echo "⏳ Cleaning up"
 
-debug_echo "⏳ Deleting ${_CURRENT_PATH}/dependency_tree_${_BASE_BRANCH_NAME}.txt"
-rm ${_CURRENT_PATH}/dependency_tree_${_BASE_BRANCH_NAME}.txt
+    debug_echo "⏳ Deleting ${_CURRENT_PATH}/dependency_tree_${_BASE_BRANCH_NAME}.txt"
+    rm ${_CURRENT_PATH}/dependency_tree_${_BASE_BRANCH_NAME}.txt
 
-if [ $? -ne 0 ]; then
-    echo "❌ Failed to delete ${_CURRENT_PATH}/dependency_tree_${_BASE_BRANCH_NAME}.txt" >&2
-    exit 7
-fi
+    if [ $? -ne 0 ]; then
+        echo "❌ Failed to delete ${_CURRENT_PATH}/dependency_tree_${_BASE_BRANCH_NAME}.txt" >&2
+        exit 7
+    fi
 
-debug_echo "⏳ Deleting ${_CURRENT_PATH}/dependency_tree_conflicts_${_BASE_BRANCH_NAME}.txt"
-rm ${_CURRENT_PATH}/dependency_tree_conflicts_${_BASE_BRANCH_NAME}.txt
+    debug_echo "⏳ Deleting ${_CURRENT_PATH}/dependency_tree_conflicts_${_BASE_BRANCH_NAME}.txt"
+    rm ${_CURRENT_PATH}/dependency_tree_conflicts_${_BASE_BRANCH_NAME}.txt
 
-if [ $? -ne 0 ]; then
-    echo "❌ Failed to delete ${_CURRENT_PATH}/dependency_tree_conflicts_${_BASE_BRANCH_NAME}.txt" >&2
-    exit 8
-fi
+    if [ $? -ne 0 ]; then
+        echo "❌ Failed to delete ${_CURRENT_PATH}/dependency_tree_conflicts_${_BASE_BRANCH_NAME}.txt" >&2
+        exit 8
+    fi
 
-debug_echo "⏳ Deleting ${_CURRENT_PATH}/dependency_tree_${_FEATURE_BRANCH_NAME}.txt"
-rm ${_CURRENT_PATH}/dependency_tree_${_FEATURE_BRANCH_NAME}.txt
+    debug_echo "⏳ Deleting ${_CURRENT_PATH}/dependency_tree_${_FEATURE_BRANCH_NAME}.txt"
+    rm ${_CURRENT_PATH}/dependency_tree_${_FEATURE_BRANCH_NAME}.txt
 
-if [ $? -ne 0 ]; then
-    echo "❌ Failed to delete ${_CURRENT_PATH}/dependency_tree_${_FEATURE_BRANCH_NAME}.txt" >&2
-    exit 9
-fi
+    if [ $? -ne 0 ]; then
+        echo "❌ Failed to delete ${_CURRENT_PATH}/dependency_tree_${_FEATURE_BRANCH_NAME}.txt" >&2
+        exit 9
+    fi
 
-debug_echo "⏳ Deleting ${_CURRENT_PATH}/dependency_tree_conflicts_${_FEATURE_BRANCH_NAME}.txt"
-rm ${_CURRENT_PATH}/dependency_tree_conflicts_${_FEATURE_BRANCH_NAME}.txt
+    debug_echo "⏳ Deleting ${_CURRENT_PATH}/dependency_tree_conflicts_${_FEATURE_BRANCH_NAME}.txt"
+    rm ${_CURRENT_PATH}/dependency_tree_conflicts_${_FEATURE_BRANCH_NAME}.txt
 
-if [ $? -ne 0 ]; then
-    echo "❌ Failed to delete ${_CURRENT_PATH}/dependency_tree_conflicts_${_FEATURE_BRANCH_NAME}.txt" >&2
-    exit 10
+    if [ $? -ne 0 ]; then
+        echo "❌ Failed to delete ${_CURRENT_PATH}/dependency_tree_conflicts_${_FEATURE_BRANCH_NAME}.txt" >&2
+        exit 10
+    fi
+else
+    debug_echo "⏩ Skipping cleanup (--no-clean-up enabled)"
 fi
 
 debug_echo "✅ Done"
