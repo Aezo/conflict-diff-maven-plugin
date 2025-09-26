@@ -62,7 +62,54 @@ class GitRepositoryUtilTest {
         nonGitDir.mkdirs();
 
         assertThatThrownBy(() -> GitRepositoryUtil.getRepository(nonGitDir))
-            .isInstanceOf(IOException.class);
+            .isInstanceOf(IOException.class)
+            .hasMessageContaining("No Git repository found starting from directory");
+    }
+
+    @Test
+    void testGetRepositoryWithNullDirectory() {
+        assertThatThrownBy(() -> GitRepositoryUtil.getRepository(null))
+            .isInstanceOf(IOException.class)
+            .hasMessageContaining("Project base directory cannot be null");
+    }
+
+    @Test
+    void testGetRepositoryWithNonExistentDirectory() {
+        File nonExistentDir = new File(tempDir, "does-not-exist");
+
+        assertThatThrownBy(() -> GitRepositoryUtil.getRepository(nonExistentDir))
+            .isInstanceOf(IOException.class)
+            .hasMessageContaining("Project base directory does not exist");
+    }
+
+    @Test
+    void testGetRepositoryFromSubdirectory() throws Exception {
+        // Create a subdirectory within the Git repository (simulating a Maven module)
+        File subDir = new File(testRepoDir, "module1");
+        subDir.mkdirs();
+        
+        // Should be able to find the Git repository from the subdirectory
+        Repository repo = GitRepositoryUtil.getRepository(subDir);
+
+        assertThat(repo).isNotNull();
+        assertThat(repo.getDirectory()).isEqualTo(gitDir);
+        
+        repo.close();
+    }
+
+    @Test
+    void testGetRepositoryFromNestedSubdirectory() throws Exception {
+        // Create nested subdirectories within the Git repository
+        File nestedSubDir = new File(testRepoDir, "module1/src/main/java");
+        nestedSubDir.mkdirs();
+        
+        // Should be able to find the Git repository from the nested subdirectory
+        Repository repo = GitRepositoryUtil.getRepository(nestedSubDir);
+
+        assertThat(repo).isNotNull();
+        assertThat(repo.getDirectory()).isEqualTo(gitDir);
+        
+        repo.close();
     }
 
     @Test

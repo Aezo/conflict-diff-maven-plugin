@@ -19,20 +19,49 @@ public class GitRepositoryUtil {
     /**
      * Gets a Git repository instance for the given project base directory.
      * 
+     * This method handles various scenarios:
+     * - Project root with Git repository
+     * - Multi-module Maven projects where Git repo is in parent directory
+     * - Submodules and Git worktrees
+     * - Temporary directories (for testing)
+     * 
      * @param projectBaseDir the base directory of the Maven project
      * @return the Git repository instance
-     * @throws IOException if there's an error accessing the Git repository
+     * @throws IOException if there's an error accessing the Git repository or no Git repository is found
      */
     public static Repository getRepository(File projectBaseDir) throws IOException {
-        File gitDir = new File(projectBaseDir, ".git");
-        if (!gitDir.exists() || !gitDir.isDirectory()) {
-            throw new IOException("No Git repository found in directory: " + projectBaseDir.getAbsolutePath());
+        if (projectBaseDir == null) {
+            throw new IOException("Project base directory cannot be null");
+        }
+        
+        if (!projectBaseDir.exists()) {
+            throw new IOException("Project base directory does not exist: " + projectBaseDir.getAbsolutePath());
         }
         
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
-        return builder.setGitDir(gitDir)
-                      .readEnvironment()
-                      .build();
+        
+        try {
+            // Start from the project directory and traverse upwards to find Git repository
+            // Use findGitDir with starting directory for better multi-module support
+            Repository repository = builder
+                    .readEnvironment()
+                    .findGitDir(projectBaseDir)  // Start search from project directory
+                    .build();
+            
+            return repository;
+        } catch (IllegalArgumentException e) {
+            // Handle case where no Git repository is found
+            throw new IOException("No Git repository found starting from directory: " + 
+                projectBaseDir.getAbsolutePath() + ". Ensure you're running from within a Git repository.", e);
+        } catch (IOException e) {
+            // Provide more descriptive error messages
+            if (e.getMessage() != null && e.getMessage().contains("not found")) {
+                throw new IOException("No Git repository found starting from directory: " + 
+                    projectBaseDir.getAbsolutePath() + ". Ensure you're running from within a Git repository.", e);
+            }
+            throw new IOException("Failed to access Git repository from directory: " + 
+                projectBaseDir.getAbsolutePath() + ". " + e.getMessage(), e);
+        }
     }
 
     /**
