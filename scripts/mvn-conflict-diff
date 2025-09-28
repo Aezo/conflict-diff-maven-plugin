@@ -16,7 +16,7 @@ DESCRIPTION:
     and shows the differences between them.
 
 USAGE:
-    $(basename "$0") [BASE_BRANCH] [OPTIONS]
+    $(basename "$0") [OPTIONS] [BASE_BRANCH]
 
 ARGUMENTS:
     BASE_BRANCH Base branch to compare against (defaults to 'develop')
@@ -25,6 +25,7 @@ OPTIONS:
     --help         Show this help message and exit
     --debug        Enable debug output to see detailed progress
     --no-clean-up  Skip cleanup of dependency tree files (requires --debug)
+    -pl <projects> Comma-separated list of projects to include in dependency analysis
 
 EXAMPLES:
     $(basename "$0")
@@ -38,6 +39,19 @@ EXAMPLES:
     
     $(basename "$0") master --debug --no-clean-up
         Compare against 'master' with debug output and skip cleanup
+    
+    $(basename "$0") -pl module1,module2 master
+        Compare against 'master' analyzing only module1 and module2 projects.
+        The -pl parameter takes the module name in the following formats:
+          - groupId:artifactId
+          - relative path
+          - artifactId
+        
+        The artifactId format only works if you are in a directory where the 
+        pom.xml's module block contains the module name.
+    
+    $(basename "$0") -pl my-module --debug develop
+        Compare against 'develop' analyzing only my-module with debug output
     
     $(basename "$0") --help
         Show this help message
@@ -71,7 +85,11 @@ list_transitive_dependency_conflicts() {
 
     debug_echo "⏳ Running maven dependency tree and saving output to ${_MAVEN_DEPENDENCY_TREE_FILE}"
 
-    mvn dependency:tree -Dverbose=true > ${_MAVEN_DEPENDENCY_TREE_FILE}
+    if [ -n "$PL_OPTION" ]; then
+        mvn dependency:tree -Dverbose=true -pl "$PL_OPTION" > ${_MAVEN_DEPENDENCY_TREE_FILE}
+    else
+        mvn dependency:tree -Dverbose=true > ${_MAVEN_DEPENDENCY_TREE_FILE}
+    fi
 
     if [ $? -ne 0 ]; then
         echo "❌ Maven dependency:tree command failed" >&2
@@ -99,6 +117,7 @@ list_transitive_dependency_conflicts() {
 DEBUG=false
 NO_CLEANUP=false
 BASE_BRANCH_ARG=""
+PL_OPTION=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -113,6 +132,14 @@ while [[ $# -gt 0 ]]; do
         --no-clean-up)
             NO_CLEANUP=true
             shift
+            ;;
+        -pl)
+            if [ -z "$2" ]; then
+                echo "Error: -pl option requires a project list argument" >&2
+                exit 1
+            fi
+            PL_OPTION="$2"
+            shift 2
             ;;
         --*)
             echo "Unknown option $1" >&2
