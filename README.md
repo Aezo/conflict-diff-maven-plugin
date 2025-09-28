@@ -126,6 +126,32 @@ mvn conflict-diff:analyze -Dconflict-diff.skip=true
 </plugin>
 ```
 
+### Multi-Module Projects
+
+For multi-module Maven projects, you can target specific modules:
+
+```bash
+# Run on a specific module only
+mvn conflict-diff:analyze -pl your-module-name
+
+# Run on multiple specific modules
+mvn conflict-diff:analyze -pl module1,module2
+
+# Run on all modules except one
+mvn conflict-diff:analyze -pl !module-to-skip
+
+# Combine with other parameters
+mvn conflict-diff:analyze -pl your-module-name -Dconflict-diff.baseBranch=master
+```
+
+Alternatively, you can navigate to the specific module directory:
+
+```bash
+# Navigate to the module and run from there
+cd your-specific-module/
+mvn conflict-diff:analyze
+```
+
 ### Parameters
 
 | Parameter    | Property                   | Default   | Description                        |
