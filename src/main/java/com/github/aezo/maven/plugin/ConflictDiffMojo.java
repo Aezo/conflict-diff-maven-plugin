@@ -25,6 +25,7 @@ import com.github.aezo.maven.plugin.model.DependencyConflict;
 import com.github.aezo.maven.plugin.model.VersionConflict;
 import com.github.aezo.maven.plugin.strategy.ConflictDetectionStrategy;
 import com.github.aezo.maven.plugin.strategy.MavenResolverConflictDetectionStrategy;
+import com.github.aezo.maven.plugin.strategy.MavenTreeConflictDetectionStrategy;
 import com.github.aezo.maven.plugin.util.GitRepositoryUtil;
 
 import de.vandermeer.asciitable.AsciiTable;
@@ -75,6 +76,14 @@ public class ConflictDiffMojo extends AbstractMojo {
     private boolean skip;
 
     /**
+     * Strategy for conflict detection. Available strategies:
+     * - "resolver" (default): Uses Maven's internal APIs for dependency resolution
+     * - "tree": Uses Maven dependency:tree command output parsing
+     */
+    @Parameter(property = "conflict-diff.strategy", defaultValue = "resolver")
+    private String strategy;
+
+    /**
      * The repository system session.
      */
     @Parameter(defaultValue = "${repositorySystemSession}", readonly = true, required = true)
@@ -117,8 +126,7 @@ public class ConflictDiffMojo extends AbstractMojo {
             getLog().info("⏳ Analyzing dependency conflicts between '" + baseBranch + "' and '" + currentBranch + "'");
 
             // Initialize the conflict detection strategy
-            conflictDetectionStrategy = new MavenResolverConflictDetectionStrategy(
-                    project, repositorySystem, repoSession, remoteRepos, this::debugLog);
+            conflictDetectionStrategy = createConflictDetectionStrategy();
 
             // Collect transitive dependency conflicts from base branch
             debugLog("⏳ Checking out base branch: " + baseBranch);
@@ -140,6 +148,24 @@ public class ConflictDiffMojo extends AbstractMojo {
         }
     }
 
+    /**
+     * Creates a conflict detection strategy based on the configured strategy parameter.
+     * 
+     * @return the appropriate ConflictDetectionStrategy implementation
+     * @throws MojoExecutionException if an invalid strategy is specified
+     */
+    private ConflictDetectionStrategy createConflictDetectionStrategy() throws MojoExecutionException {
+        switch (strategy.toLowerCase()) {
+            case "resolver":
+                return new MavenResolverConflictDetectionStrategy(
+                        project, repositorySystem, repoSession, remoteRepos, this::debugLog);
+            case "tree":
+                return new MavenTreeConflictDetectionStrategy(project, this::debugLog);
+            default:
+                throw new MojoExecutionException("❌ Invalid strategy: " + strategy + 
+                        ". Valid strategies are: 'resolver', 'tree'");
+        }
+    }
 
     private Map<String, List<DependencyConflict>> compareTransitiveDependencyConflicts(List<DependencyConflict> baseConflicts, List<DependencyConflict> currentConflicts) {
         debugLog("⏳ Comparing transitive dependency conflicts");
