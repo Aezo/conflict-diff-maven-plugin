@@ -29,23 +29,24 @@ import com.github.aezo.maven.plugin.model.VersionConflict;
 /**
  * Default implementation of the conflict detection strategy.
  * 
- * This implementation analyzes transitive dependency conflicts by building dependency
- * graphs using Maven's internal APIs and identifying cases where transitive 
+ * This implementation analyzes transitive dependency conflicts by building
+ * dependency
+ * graphs using Maven's internal APIs and identifying cases where transitive
  * dependencies are overridden due to version conflicts.
  */
 public class DefaultConflictDetectionStrategy implements ConflictDetectionStrategy {
-    
+
     private final MavenProject project;
     private final RepositorySystem repositorySystem;
     private final RepositorySystemSession repoSession;
     private final List<RemoteRepository> remoteRepos;
     private final Consumer<String> debugLogger;
-    
-    public DefaultConflictDetectionStrategy(MavenProject project, 
-                                          RepositorySystem repositorySystem,
-                                          RepositorySystemSession repoSession,
-                                          List<RemoteRepository> remoteRepos,
-                                          Consumer<String> debugLogger) {
+
+    public DefaultConflictDetectionStrategy(MavenProject project,
+            RepositorySystem repositorySystem,
+            RepositorySystemSession repoSession,
+            List<RemoteRepository> remoteRepos,
+            Consumer<String> debugLogger) {
         this.project = project;
         this.repositorySystem = repositorySystem;
         this.repoSession = repoSession;
@@ -54,35 +55,40 @@ public class DefaultConflictDetectionStrategy implements ConflictDetectionStrate
     }
 
     @Override
-    public List<DependencyConflict> collectTransitiveDependencyConflicts(String branchName)
-            throws DependencyCollectionException, DependencyResolutionException, MojoExecutionException {
-        debugLogger.accept("⏳ Collecting transitive dependency conflicts for branch: " + branchName);
+    public List<DependencyConflict> collectTransitiveDependencyConflicts(String branchName) {
+        try {
+            debugLogger.accept("⏳ Collecting transitive dependency conflicts for branch: " + branchName);
 
-        // Build the dependency graph using Maven Resolver
-        CollectRequest collectRequest = new CollectRequest();
+            // Build the dependency graph using Maven Resolver
+            CollectRequest collectRequest = new CollectRequest();
 
-        // Convert Maven Artifact to Aether Artifact
-        Artifact projectArtifact = project.getArtifact();
-        org.eclipse.aether.artifact.Artifact aetherArtifact = new DefaultArtifact(
-                projectArtifact.getGroupId(),
-                projectArtifact.getArtifactId(),
-                projectArtifact.getClassifier(),
-                projectArtifact.getType(),
-                projectArtifact.getVersion());
+            // Convert Maven Artifact to Aether Artifact
+            Artifact projectArtifact = project.getArtifact();
+            org.eclipse.aether.artifact.Artifact aetherArtifact = new DefaultArtifact(
+                    projectArtifact.getGroupId(),
+                    projectArtifact.getArtifactId(),
+                    projectArtifact.getClassifier(),
+                    projectArtifact.getType(),
+                    projectArtifact.getVersion());
 
-        // COMPILE scope is used for conflict detection.
-        collectRequest.setRoot(new Dependency(aetherArtifact, JavaScopes.COMPILE));
-        collectRequest.setRepositories(remoteRepos);
+            // COMPILE scope is used for conflict detection.
+            collectRequest.setRoot(new Dependency(aetherArtifact, JavaScopes.COMPILE));
+            collectRequest.setRepositories(remoteRepos);
 
-        DependencyNode rootNode = repositorySystem.collectDependencies(repoSession, collectRequest).getRoot();
+            DependencyNode rootNode = repositorySystem.collectDependencies(repoSession, collectRequest).getRoot();
 
-        // Extract conflict information from the dependency graph
-        List<DependencyConflict> dependencyConflicts = extractConflicts(rootNode);
+            // Extract conflict information from the dependency graph
+            List<DependencyConflict> dependencyConflicts = extractConflicts(rootNode);
 
-        debugLogger.accept("Found " + dependencyConflicts.size() + " dependency conflicts for branch: " + branchName);
+            debugLogger
+                    .accept("Found " + dependencyConflicts.size() + " dependency conflicts for branch: " + branchName);
 
-        // Return sorted list of conflict information for comparison
-        return dependencyConflicts;
+            // Return sorted list of conflict information for comparison
+            return dependencyConflicts;
+        } catch (DependencyCollectionException | MojoExecutionException e) {
+            throw new RuntimeException("Failed to collect transitive dependency conflicts for branch: " + branchName,
+                    e);
+        }
     }
 
     /**
@@ -187,9 +193,11 @@ public class DefaultConflictDetectionStrategy implements ConflictDetectionStrate
      * @param versionCounts Map of ComparableVersion objects to their occurrence
      *                      counts
      * @return List of version conflicts for the artifact
-     * @throws MojoExecutionException if no winning version can be found for the artifact
+     * @throws MojoExecutionException if no winning version can be found for the
+     *                                artifact
      */
-    private List<VersionConflict> computeVersionConflicts(String artifactKey, Map<ComparableVersion, Integer> versionCounts,
+    private List<VersionConflict> computeVersionConflicts(String artifactKey,
+            Map<ComparableVersion, Integer> versionCounts,
             Map<String, ComparableVersion> resolvedArtifactsVersions) throws MojoExecutionException {
         // Find the winning version (the one that appears in the resolved dependencies)
         ComparableVersion winningVersion = findWinningVersionFromProject(artifactKey, resolvedArtifactsVersions);
@@ -215,17 +223,19 @@ public class DefaultConflictDetectionStrategy implements ConflictDetectionStrate
      * Finds the winning version of an artifact from the resolved project
      * dependencies.
      * 
-     * @param artifactKey The artifact identifier (groupId:artifactId)
+     * @param artifactKey               The artifact identifier (groupId:artifactId)
      * @param resolvedArtifactsVersions Map of resolved artifact versions
      * @return The resolved version for the artifact
-     * @throws MojoExecutionException if the artifact is not found in resolved dependencies
+     * @throws MojoExecutionException if the artifact is not found in resolved
+     *                                dependencies
      */
-    private ComparableVersion findWinningVersionFromProject(String artifactKey, Map<String, ComparableVersion> resolvedArtifactsVersions) throws MojoExecutionException {
+    private ComparableVersion findWinningVersionFromProject(String artifactKey,
+            Map<String, ComparableVersion> resolvedArtifactsVersions) throws MojoExecutionException {
         if (resolvedArtifactsVersions.containsKey(artifactKey)) {
             return resolvedArtifactsVersions.get(artifactKey);
         }
 
-        throw new MojoExecutionException("❌ No winning version found for artifact: " + artifactKey + 
-            ". This indicates an inconsistency in the dependency resolution process.");
+        throw new MojoExecutionException("❌ No winning version found for artifact: " + artifactKey +
+                ". This indicates an inconsistency in the dependency resolution process.");
     }
 }

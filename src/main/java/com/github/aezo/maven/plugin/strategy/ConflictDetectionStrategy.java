@@ -21,10 +21,6 @@ public interface ConflictDetectionStrategy {
      * 
      * @param branchName the name of the branch to analyze
      * @return a list of dependency conflicts found in the branch
-     * @throws DependencyCollectionException if dependency collection fails
-     * @throws DependencyResolutionException if dependency resolution fails
-     * @throws MojoExecutionException if the analysis fails
      */
-    List<DependencyConflict> collectTransitiveDependencyConflicts(String branchName)
-            throws DependencyCollectionException, DependencyResolutionException, MojoExecutionException;
+    List<DependencyConflict> collectTransitiveDependencyConflicts(String branchName);
 }
