@@ -2,10 +2,6 @@ package com.github.aezo.maven.plugin.strategy;
 
 import java.util.List;
 
-import org.apache.maven.plugin.MojoExecutionException;
-import org.eclipse.aether.collection.DependencyCollectionException;
-import org.eclipse.aether.resolution.DependencyResolutionException;
-
 import com.github.aezo.maven.plugin.model.DependencyConflict;
 
 /**
