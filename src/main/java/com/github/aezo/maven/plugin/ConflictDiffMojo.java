@@ -23,6 +23,12 @@ import org.eclipse.jgit.lib.Repository;
 
 import de.vandermeer.asciitable.AsciiTable;
 
+import com.github.aezo.maven.plugin.model.DependencyConflict;
+import com.github.aezo.maven.plugin.model.VersionConflict;
+import com.github.aezo.maven.plugin.strategy.ConflictDetectionStrategy;
+import com.github.aezo.maven.plugin.strategy.DefaultConflictDetectionStrategy;
+import com.github.aezo.maven.plugin.util.GitRepositoryUtil;
+
 /**
  * Maven plugin goal that compares transitive dependency conflicts between Git
  * branches.

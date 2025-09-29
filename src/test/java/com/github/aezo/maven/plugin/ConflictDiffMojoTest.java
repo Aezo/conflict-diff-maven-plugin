@@ -43,6 +43,11 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.github.aezo.maven.plugin.model.DependencyConflict;
+import com.github.aezo.maven.plugin.model.VersionConflict;
+import com.github.aezo.maven.plugin.strategy.ConflictDetectionStrategy;
+import com.github.aezo.maven.plugin.util.GitRepositoryUtil;
+
 /**
  * Unit tests for ConflictDiffMojo.
  */
