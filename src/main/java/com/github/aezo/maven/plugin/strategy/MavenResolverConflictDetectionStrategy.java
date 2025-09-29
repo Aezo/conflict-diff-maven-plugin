@@ -26,14 +26,14 @@ import com.github.aezo.maven.plugin.model.DependencyConflict;
 import com.github.aezo.maven.plugin.model.VersionConflict;
 
 /**
- * Default implementation of the conflict detection strategy.
+ * Maven Resolver implementation of the conflict detection strategy.
  * 
  * This implementation analyzes transitive dependency conflicts by building
  * dependency
  * graphs using Maven's internal APIs and identifying cases where transitive
  * dependencies are overridden due to version conflicts.
  */
-public class DefaultConflictDetectionStrategy implements ConflictDetectionStrategy {
+public class MavenResolverConflictDetectionStrategy implements ConflictDetectionStrategy {
 
     private final MavenProject project;
     private final RepositorySystem repositorySystem;
@@ -41,7 +41,7 @@ public class DefaultConflictDetectionStrategy implements ConflictDetectionStrate
     private final List<RemoteRepository> remoteRepos;
     private final Consumer<String> debugLogger;
 
-    public DefaultConflictDetectionStrategy(MavenProject project,
+    public MavenResolverConflictDetectionStrategy(MavenProject project,
             RepositorySystem repositorySystem,
             RepositorySystemSession repoSession,
             List<RemoteRepository> remoteRepos,

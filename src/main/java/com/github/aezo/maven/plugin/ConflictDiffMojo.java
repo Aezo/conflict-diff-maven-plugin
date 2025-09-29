@@ -24,7 +24,7 @@ import org.eclipse.jgit.lib.Repository;
 import com.github.aezo.maven.plugin.model.DependencyConflict;
 import com.github.aezo.maven.plugin.model.VersionConflict;
 import com.github.aezo.maven.plugin.strategy.ConflictDetectionStrategy;
-import com.github.aezo.maven.plugin.strategy.DefaultConflictDetectionStrategy;
+import com.github.aezo.maven.plugin.strategy.MavenResolverConflictDetectionStrategy;
 import com.github.aezo.maven.plugin.util.GitRepositoryUtil;
 
 import de.vandermeer.asciitable.AsciiTable;
@@ -117,7 +117,7 @@ public class ConflictDiffMojo extends AbstractMojo {
             getLog().info("⏳ Analyzing dependency conflicts between '" + baseBranch + "' and '" + currentBranch + "'");
 
             // Initialize the conflict detection strategy
-            conflictDetectionStrategy = new DefaultConflictDetectionStrategy(
+            conflictDetectionStrategy = new MavenResolverConflictDetectionStrategy(
                     project, repositorySystem, repoSession, remoteRepos, this::debugLog);
 
             // Collect transitive dependency conflicts from base branch
