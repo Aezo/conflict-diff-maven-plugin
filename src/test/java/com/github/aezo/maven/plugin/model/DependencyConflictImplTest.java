@@ -11,10 +11,14 @@ import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.github.aezo.maven.plugin.model.DependencyConflict;
+import com.github.aezo.maven.plugin.model.DependencyConflictImpl;
+import com.github.aezo.maven.plugin.model.VersionConflict;
+
 /**
  * Unit tests for DependencyConflict.
  */
-class DependencyConflictTest {
+class DependencyConflictImplTest {
 
     private DependencyConflict dependency1;
     private DependencyConflict dependency2;
@@ -29,31 +33,33 @@ class DependencyConflictTest {
         version2 = new VersionConflict(new ComparableVersion("2.0"), new ComparableVersion("2.1"), 3);
         version3 = new VersionConflict(new ComparableVersion("1.0"), new ComparableVersion("1.1"), 2);
 
-        dependency1 = new DependencyConflict("com.example:library1", Arrays.asList(version1, version2));
-        dependency2 = new DependencyConflict("com.example:library1", Arrays.asList(version3));
-        dependency3 = new DependencyConflict("com.example:library2", Arrays.asList(version1));
+        dependency1 = new DependencyConflictImpl("com.example:library1");
+        dependency1.addConflict(version1);
+        dependency1.addConflict(version2);
+        dependency2 = new DependencyConflictImpl("com.example:library1");
+        dependency2.addConflict(version3);
+        dependency3 = new DependencyConflictImpl("com.example:library2");
+        dependency3.addConflict(version1);
     }
 
     @Test
     void testConstructorWithNullArtifactKeyThrowsException() {
-        List<VersionConflict> conflicts = Arrays.asList(version1, version2);
-
-        assertThatThrownBy(() -> new DependencyConflict(null, conflicts))
+        assertThatThrownBy(() -> new DependencyConflictImpl(null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("ArtifactKey cannot be null");
     }
 
     @Test
     void testAdd() {
-        DependencyConflict result = dependency1.add(dependency2);
+        dependency1.add(dependency2);
 
-        assertThat(result.getArtifactKey()).isEqualTo("com.example:library1");
-        assertThat(result.getConflicts()).hasSize(2);
+        assertThat(dependency1.getArtifactKey()).isEqualTo("com.example:library1");
+        assertThat(dependency1.getConflicts()).hasSize(2);
 
         ComparableVersion mergedVersion = new ComparableVersion("1.0");
         
         // Find the merged version conflict (1.0 -> 1.1)
-        VersionConflict merged = result.getConflicts().stream()
+        VersionConflict merged = dependency1.getConflicts().values().stream()
             .filter(vc -> vc.getPomVersion().equals(mergedVersion))
             .findFirst()
             .orElse(null);
@@ -77,16 +83,6 @@ class DependencyConflictTest {
     }
 
     @Test
-    void testUnion() {
-        DependencyConflict result = dependency1.union(dependency2);
-
-        // Union should be the same as add
-        DependencyConflict addResult = dependency1.add(dependency2);
-        assertThat(result.getArtifactKey()).isEqualTo(addResult.getArtifactKey());
-        assertThat(result.getConflicts()).hasSameSizeAs(addResult.getConflicts());
-    }
-
-    @Test
     void testDiff() {
         // Create test conflicts for diff
         VersionConflict baseVersion1 = new VersionConflict(new ComparableVersion("1.0"), new ComparableVersion("1.1"), 2);
@@ -94,18 +90,20 @@ class DependencyConflictTest {
         VersionConflict currentVersion1 = new VersionConflict(new ComparableVersion("1.0"), new ComparableVersion("1.1"), 5);
         VersionConflict currentVersion3 = new VersionConflict(new ComparableVersion("3.0"), new ComparableVersion("3.1"), 2);
 
-        DependencyConflict current = new DependencyConflict("com.example:library", 
-            Arrays.asList(currentVersion1, currentVersion3));
-        DependencyConflict base = new DependencyConflict("com.example:library", 
-            Arrays.asList(baseVersion1, baseVersion2));
+        DependencyConflict current = new DependencyConflictImpl("com.example:library");
+        current.addConflict(currentVersion1);
+        current.addConflict(currentVersion3);
+        DependencyConflict base = new DependencyConflictImpl("com.example:library");
+        base.addConflict(baseVersion1);
+        base.addConflict(baseVersion2);
 
-        DependencyConflict diff = current.diff(base);
+        current.diff(base);
 
-        assertThat(diff.getArtifactKey()).isEqualTo("com.example:library");
-        assertThat(diff.getConflicts()).hasSize(3);
+        assertThat(current.getArtifactKey()).isEqualTo("com.example:library");
+        assertThat(current.getConflicts()).hasSize(3);
 
         // Check for increased conflict (1.0 -> 1.1): 5 - 2 = 3
-        VersionConflict increasedConflict = diff.getConflicts().stream()
+        VersionConflict increasedConflict = current.getConflicts().values().stream()
             .filter(vc -> vc.getPomVersion().equals(new ComparableVersion("1.0")))
             .findFirst()
             .orElse(null);
@@ -113,7 +111,7 @@ class DependencyConflictTest {
         assertThat(increasedConflict.getCount()).isEqualTo(3);
 
         // Check for new conflict (3.0 -> 3.1): 2
-        VersionConflict newConflict = diff.getConflicts().stream()
+        VersionConflict newConflict = current.getConflicts().values().stream()
             .filter(vc -> vc.getPomVersion().equals(new ComparableVersion("3.0")))
             .findFirst()
             .orElse(null);
@@ -121,7 +119,7 @@ class DependencyConflictTest {
         assertThat(newConflict.getCount()).isEqualTo(2);
 
         // Check for removed conflict (2.0 -> 2.1): -1
-        VersionConflict removedConflict = diff.getConflicts().stream()
+        VersionConflict removedConflict = current.getConflicts().values().stream()
             .filter(vc -> vc.getPomVersion().equals(new ComparableVersion("2.0")))
             .findFirst()
             .orElse(null);
@@ -148,14 +146,16 @@ class DependencyConflictTest {
         DependencyConflict diff = dependency1.diff(dependency1);
 
         assertThat(diff.getArtifactKey()).isEqualTo(dependency1.getArtifactKey());
-        for (VersionConflict conflict : diff.getConflicts()) {
+        for (VersionConflict conflict : diff.getConflicts().values()) {
             assertThat(conflict.getCount()).isEqualTo(0);
         }
     }
 
     @Test
     void testEquals() {
-        DependencyConflict other = new DependencyConflict("com.example:library1", Arrays.asList(version1, version2));
+        DependencyConflict other = new DependencyConflictImpl("com.example:library1");
+        other.addConflict(version1);
+        other.addConflict(version2);
 
         assertThat(dependency1).isEqualTo(other);
     }
@@ -190,20 +190,11 @@ class DependencyConflictTest {
     }
 
     @Test
-    void testAddWithNullConflicts() {
-        DependencyConflict depWithNullConflicts = new DependencyConflict("com.example:library1", null);
-        DependencyConflict result = depWithNullConflicts.add(dependency2);
-
-        assertThat(result.getConflicts()).hasSize(1);
-        assertThat(result.getConflicts().iterator().next()).isEqualTo(version3);
-    }
-
-    @Test
     void testDiffWithEmptyConflicts() {
-        DependencyConflict empty = new DependencyConflict("com.example:library1", new ArrayList<>());
-        DependencyConflict result = empty.diff(dependency2);
+        DependencyConflict dependency1 = new DependencyConflictImpl("com.example:library1");
+        dependency1.diff(dependency2);
 
-        assertThat(result.getConflicts()).hasSize(1);
-        assertThat(result.getConflicts().iterator().next().getCount()).isEqualTo(-2); // Negative count for removed conflict
+        assertThat(dependency1.getConflicts()).hasSize(1);
+        assertThat(dependency1.getConflicts().values().iterator().next().getCount()).isEqualTo(-2); // Negative count for removed conflict
     }
 }
