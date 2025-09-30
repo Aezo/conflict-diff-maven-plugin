@@ -113,6 +113,7 @@ public class ConflictDiffMojo extends AbstractMojo {
     
     private Git git;
     private String originalBranch;
+    private volatile boolean inShutdown = false;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -172,6 +173,7 @@ public class ConflictDiffMojo extends AbstractMojo {
      */
     private void registerShutdownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            inShutdown = true;
             debugLog("⚠️  Plugin interrupted, performing cleanup...");
             cleanup("plugin interrupted");
         }));
@@ -447,8 +449,9 @@ public class ConflictDiffMojo extends AbstractMojo {
 
     private void debugLog(String message) {
         if (debug) {
-            // Only use color if output is going to a terminal
-            if (isTerminal()) {
+            // Avoid ANSI codes during shutdown to prevent NumberFormatException
+            // Only use color if output is going to a terminal and not in shutdown
+            if (!inShutdown && isTerminal()) {
                 String greyMessage = "\033[90m" + message + "\033[0m";
                 getLog().info(greyMessage);
             } else {
