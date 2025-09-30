@@ -23,6 +23,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.artifact.JavaScopes;
 
 import com.github.aezo.maven.plugin.model.DependencyConflict;
+import com.github.aezo.maven.plugin.model.DependencyConflictImpl;
 import com.github.aezo.maven.plugin.model.VersionConflict;
 
 /**
@@ -120,10 +121,10 @@ public class MavenResolverConflictDetectionStrategy implements ConflictDetection
             // Check if this artifact has version conflicts (multiple versions)
             if (versionCounts.size() > 1) {
                 // Multiple versions found - this indicates a conflict
-                List<VersionConflict> versionConflicts = computeVersionConflicts(artifactKey, versionCounts,
+                DependencyConflict dependencyConflict = computeVersionConflicts(artifactKey, versionCounts,
                         resolvedArtifactsVersions);
-                if (!versionConflicts.isEmpty()) {
-                    dependencyConflicts.add(new DependencyConflict(artifactKey, versionConflicts));
+                if (dependencyConflict.getConflicts().size() > 0) {
+                    dependencyConflicts.add(dependencyConflict);
                 }
             }
         }
@@ -195,27 +196,23 @@ public class MavenResolverConflictDetectionStrategy implements ConflictDetection
      * @throws MojoExecutionException if no winning version can be found for the
      *                                artifact
      */
-    private List<VersionConflict> computeVersionConflicts(String artifactKey,
+    private DependencyConflict computeVersionConflicts(String artifactKey,
             Map<ComparableVersion, Integer> versionCounts,
             Map<String, ComparableVersion> resolvedArtifactsVersions) throws MojoExecutionException {
         // Find the winning version (the one that appears in the resolved dependencies)
         ComparableVersion winningVersion = findWinningVersionFromProject(artifactKey, resolvedArtifactsVersions);
-
-        // Separate conflicted versions into upgrades and downgrades
-        List<VersionConflict> versionConflicts = new ArrayList<>();
+        DependencyConflict dependencyConflict = new DependencyConflictImpl(artifactKey);
 
         for (Map.Entry<ComparableVersion, Integer> versionEntry : versionCounts.entrySet()) {
             ComparableVersion version = versionEntry.getKey();
             Integer count = versionEntry.getValue();
 
             if (!version.equals(winningVersion)) {
-                VersionConflict versionConflict = new VersionConflict(version, winningVersion, count);
-
-                versionConflicts.add(versionConflict);
+                dependencyConflict.addConflict(new VersionConflict(version, winningVersion, count));
             }
         }
 
-        return versionConflicts;
+        return dependencyConflict;
     }
 
     /**
