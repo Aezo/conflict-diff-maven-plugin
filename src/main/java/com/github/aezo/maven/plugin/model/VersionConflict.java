@@ -209,6 +209,10 @@ public class VersionConflict {
     public int hashCode() {
         return Objects.hash(pomVersion, resolvedVersion);
     }
+
+    public String hashKey() {
+        return pomVersion + "->" + resolvedVersion;
+    }
     
     @Override
     public String toString() {
