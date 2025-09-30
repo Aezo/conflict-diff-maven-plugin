@@ -102,7 +102,7 @@ public class VersionConflict {
      * @return a new VersionConflict with the sum of counts
      * @throws IllegalArgumentException if other is null or versions don't match
      */
-    public VersionConflict add(VersionConflict other) {
+    public void add(VersionConflict other) {
         if (other == null) {
             throw new IllegalArgumentException("VersionConflict cannot be null");
         }
@@ -129,7 +129,7 @@ public class VersionConflict {
             }
         }
         
-        return new VersionConflict(this.pomVersion, this.resolvedVersion, this.count + other.count);
+        this.count += other.count;
     }
     
     /**
@@ -139,7 +139,7 @@ public class VersionConflict {
      * @return a new VersionConflict with the difference of counts
      * @throws IllegalArgumentException if other is null or versions don't match
      */
-    public VersionConflict subtract(VersionConflict other) {
+    public void subtract(VersionConflict other) {
         if (other == null) {
             throw new IllegalArgumentException("VersionConflict cannot be null");
         }
@@ -166,7 +166,7 @@ public class VersionConflict {
             }
         }
         
-        return new VersionConflict(this.pomVersion, this.resolvedVersion, this.count - other.count);
+        this.count -= other.count;
     }
     
     @Override
