@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ import com.github.aezo.maven.plugin.model.VersionConflict;
 public class MavenTreeConflictDetectionStrategy implements ConflictDetectionStrategy {
 
     private final MavenProject project;
+    private final String modules;
     private final Consumer<String> debugLogger;
 
     // Pattern to match conflict lines in Maven dependency tree output
@@ -41,8 +43,9 @@ public class MavenTreeConflictDetectionStrategy implements ConflictDetectionStra
     private static final Pattern CONFLICT_PATTERN = Pattern.compile(
             ".*\\(([^:]+):([^:]+):([^:]+):([^:]+):([^)]+)\\s*-\\s*omitted for conflict with\\s+([^)]+)\\)");
 
-    public MavenTreeConflictDetectionStrategy(MavenProject project, Consumer<String> debugLogger) {
+    public MavenTreeConflictDetectionStrategy(MavenProject project, String modules, Consumer<String> debugLogger) {
         this.project = project;
+        this.modules = modules;
         this.debugLogger = debugLogger;
     }
 
@@ -86,13 +89,18 @@ public class MavenTreeConflictDetectionStrategy implements ConflictDetectionStra
         command.add("dependency:tree");
         command.add("-Dverbose");
 
-        debugLogger.accept("Modules: " + project.getModules());
-
-        // Add module specification if this is a multi-module project
-        if (project.getModules() != null && !project.getModules().isEmpty()) {
-            String moduleName = project.getArtifactId();
+        // Add module specification if -pl parameter is passed
+        if (modules != null && !modules.trim().isEmpty() && project.getModules() != null) {
+            List<String> modulesList = Arrays.asList(modules.split(","));
+            
+            for (String module : modulesList) {
+                if (!project.getModules().contains(module)) {
+                    throw new RuntimeException("Module " + module + " not found in project");
+                }
+            }
             command.add("-pl");
-            command.add(moduleName);
+            command.add(modules);
+            debugLogger.accept("Using modules: " + modules);
         }
 
         debugLogger.accept("Executing command: " + String.join(" ", command));

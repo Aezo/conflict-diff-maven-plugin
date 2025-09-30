@@ -84,6 +84,13 @@ public class ConflictDiffMojo extends AbstractMojo {
     private String strategy;
 
     /**
+     * Comma-separated list of modules to build (same as Maven's -pl parameter).
+     * Only used with "mvn-dependency-tree" strategy.
+     */
+    @Parameter(property = "modules")
+    private String modules;
+
+    /**
      * The repository system session.
      */
     @Parameter(defaultValue = "${repositorySystemSession}", readonly = true, required = true)
@@ -160,7 +167,7 @@ public class ConflictDiffMojo extends AbstractMojo {
                 return new MavenResolverConflictDetectionStrategy(
                         project, repositorySystem, repoSession, remoteRepos, this::debugLog);
             case "mvn-dependency-tree":
-                return new MavenTreeConflictDetectionStrategy(project, this::debugLog);
+                return new MavenTreeConflictDetectionStrategy(project, modules, this::debugLog);
             default:
                 throw new MojoExecutionException("❌ Invalid strategy: " + strategy + 
                         ". Valid strategies are: 'resolver', 'tree'");
