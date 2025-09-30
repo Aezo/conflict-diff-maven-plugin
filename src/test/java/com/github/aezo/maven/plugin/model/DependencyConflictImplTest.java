@@ -50,6 +50,15 @@ class DependencyConflictImplTest {
     }
 
     @Test
+    void testAddConflict() {
+        dependency1.addConflict(version3);
+
+        assertThat(dependency1.getConflicts()).hasSize(2);
+        assertThat(dependency1.getConflicts().get(version3.hashKey())).isNotNull();
+        assertThat(dependency1.getConflicts().get(version3.hashKey()).getCount()).isEqualTo(7);
+    }
+
+    @Test
     void testAdd() {
         dependency1.add(dependency2);
 
