@@ -94,30 +94,41 @@ class DependencyConflictImplTest {
         VersionConflict currentVersion1 = new VersionConflict(new ComparableVersion("1.0"), new ComparableVersion("1.1"), 5);
         VersionConflict currentVersion3 = new VersionConflict(new ComparableVersion("3.0"), new ComparableVersion("3.1"), 2);
 
+        /*
+         * com.example:library
+         * 1.0 -> 1.1: 5
+         * 3.0 -> 3.1: 2
+         */
         DependencyConflict current = new DependencyConflictImpl("com.example:library");
         current.addConflict(currentVersion1);
         current.addConflict(currentVersion3);
+        
+        /*
+         * com.example:library
+         * 1.0 -> 1.1: 2
+         * 2.0 -> 2.1: 1
+         */
         DependencyConflict base = new DependencyConflictImpl("com.example:library");
         base.addConflict(baseVersion1);
         base.addConflict(baseVersion2);
 
-        current.diff(base);
+        DependencyConflict diff = current.diff(base);
 
-        assertThat(current.getArtifactKey()).isEqualTo("com.example:library");
-        assertThat(current.getConflicts()).hasSize(3);
+        assertThat(diff.getArtifactKey()).isEqualTo("com.example:library");
+        assertThat(diff.getConflicts()).hasSize(3);
 
         // Check for increased conflict (1.0 -> 1.1): 5 - 2 = 3
-        VersionConflict increasedConflict = current.getConflicts().get(baseVersion1.hashKey());
+        VersionConflict increasedConflict = diff.getConflicts().get(baseVersion1.hashKey());
         assertThat(increasedConflict).isNotNull();
         assertThat(increasedConflict.getCount()).isEqualTo(3);
 
         // Check for new conflict (3.0 -> 3.1): 2
-        VersionConflict newConflict = current.getConflicts().get(currentVersion3.hashKey());
+        VersionConflict newConflict = diff.getConflicts().get(currentVersion3.hashKey());
         assertThat(newConflict).isNotNull();
         assertThat(newConflict.getCount()).isEqualTo(2);
 
         // Check for removed conflict (2.0 -> 2.1): -1
-        VersionConflict removedConflict = current.getConflicts().get(baseVersion2.hashKey());
+        VersionConflict removedConflict = diff.getConflicts().get(baseVersion2.hashKey());
         assertThat(removedConflict).isNotNull();
         assertThat(removedConflict.getCount()).isEqualTo(-1);
     }
@@ -187,9 +198,9 @@ class DependencyConflictImplTest {
     @Test
     void testDiffWithEmptyConflicts() {
         DependencyConflict dependency1 = new DependencyConflictImpl("com.example:library1");
-        dependency1.diff(dependency2);
+        DependencyConflict diff = dependency1.diff(dependency2);
 
-        assertThat(dependency1.getConflicts()).hasSize(1);
-        assertThat(dependency1.getConflicts().values().iterator().next().getCount()).isEqualTo(-2); // Negative count for removed conflict
+        assertThat(diff.getConflicts()).hasSize(1);
+        assertThat(diff.getConflicts().values().iterator().next().getCount()).isEqualTo(-2); // Negative count for removed conflict
     }
 }
