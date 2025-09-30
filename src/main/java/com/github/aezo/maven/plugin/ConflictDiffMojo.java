@@ -80,7 +80,7 @@ public class ConflictDiffMojo extends AbstractMojo {
      * - "resolver-api" (default): Uses Maven's internal APIs for dependency resolution
      * - "mvn-dependency-tree": Uses Maven dependency:tree command output parsing
      */
-    @Parameter(property = "conflict-diff.strategy", defaultValue = "resolver")
+    @Parameter(property = "conflict-diff.strategy", defaultValue = "mvn-dependency-tree")
     private String strategy;
 
     /**
