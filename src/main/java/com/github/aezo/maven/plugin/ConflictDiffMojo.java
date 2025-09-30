@@ -110,6 +110,9 @@ public class ConflictDiffMojo extends AbstractMojo {
     private RepositorySystem repositorySystem;
 
     private ConflictDetectionStrategy conflictDetectionStrategy;
+    
+    private Git git;
+    private String originalBranch;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -120,9 +123,13 @@ public class ConflictDiffMojo extends AbstractMojo {
 
         try {
             Repository repository = GitRepositoryUtil.getRepository(project.getBasedir());
-            Git git = new Git(repository);
+            git = new Git(repository);
 
             String currentBranch = GitRepositoryUtil.getCurrentBranch(git);
+            originalBranch = currentBranch;
+
+            // Register shutdown hook for cleanup
+            registerShutdownHook();
 
             if (currentBranch.equals(baseBranch)) {
                 getLog().info("⏩ Current branch (" + currentBranch + ") is the same as base branch (" + baseBranch
@@ -151,7 +158,44 @@ public class ConflictDiffMojo extends AbstractMojo {
             reportConflicts(conflicts);
 
         } catch (Exception e) {
+            // Ensure cleanup happens even if there's an exception
+            cleanup();
             throw new MojoExecutionException("❌ Failed to analyze dependency conflicts", e);
+        } finally {
+            // Always try to cleanup on normal execution
+            cleanup();
+        }
+    }
+
+    /**
+     * Registers a shutdown hook to ensure cleanup happens if the plugin is interrupted.
+     */
+    private void registerShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            debugLog("⚠️  Plugin interrupted, performing cleanup...");
+            cleanup();
+        }));
+    }
+
+    /**
+     * Performs cleanup by checking out the original branch if needed.
+     * This method is safe to call multiple times and handles all exceptions gracefully.
+     */
+    private void cleanup() {
+        if (git == null || originalBranch == null) {
+            return;
+        }
+
+        try {
+            String currentBranch = GitRepositoryUtil.getCurrentBranch(git);
+            if (!currentBranch.equals(originalBranch)) {
+                debugLog("🔄 Returning to original branch: " + originalBranch);
+                GitRepositoryUtil.checkoutBranch(git, originalBranch);
+                getLog().info("✅ Returned to original branch: " + originalBranch);
+            }
+        } catch (Exception e) {
+            // Log the error but don't throw to avoid masking the original exception
+            getLog().warn("⚠️  Failed to return to original branch (" + originalBranch + "): " + e.getMessage());
         }
     }
 
