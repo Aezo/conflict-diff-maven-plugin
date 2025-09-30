@@ -77,8 +77,8 @@ public class ConflictDiffMojo extends AbstractMojo {
 
     /**
      * Strategy for conflict detection. Available strategies:
-     * - "resolver" (default): Uses Maven's internal APIs for dependency resolution
-     * - "tree": Uses Maven dependency:tree command output parsing
+     * - "resolver-api" (default): Uses Maven's internal APIs for dependency resolution
+     * - "mvn-dependency-tree": Uses Maven dependency:tree command output parsing
      */
     @Parameter(property = "conflict-diff.strategy", defaultValue = "resolver")
     private String strategy;
@@ -156,10 +156,10 @@ public class ConflictDiffMojo extends AbstractMojo {
      */
     private ConflictDetectionStrategy createConflictDetectionStrategy() throws MojoExecutionException {
         switch (strategy.toLowerCase()) {
-            case "resolver":
+            case "resolver-api":
                 return new MavenResolverConflictDetectionStrategy(
                         project, repositorySystem, repoSession, remoteRepos, this::debugLog);
-            case "tree":
+            case "mvn-dependency-tree":
                 return new MavenTreeConflictDetectionStrategy(project, this::debugLog);
             default:
                 throw new MojoExecutionException("❌ Invalid strategy: " + strategy + 
