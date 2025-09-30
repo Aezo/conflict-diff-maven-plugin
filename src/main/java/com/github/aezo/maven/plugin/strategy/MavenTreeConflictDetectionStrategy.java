@@ -86,6 +86,8 @@ public class MavenTreeConflictDetectionStrategy implements ConflictDetectionStra
         command.add("dependency:tree");
         command.add("-Dverbose");
 
+        debugLogger.accept("Modules: " + project.getModules());
+
         // Add module specification if this is a multi-module project
         if (project.getModules() != null && !project.getModules().isEmpty()) {
             String moduleName = project.getArtifactId();
