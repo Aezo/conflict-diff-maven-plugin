@@ -116,9 +116,6 @@ public class MavenTreeConflictDetectionStrategy implements ConflictDetectionStra
             String line;
             while ((line = reader.readLine()) != null) {
                 output.add(line);
-                if (debugLogger != null) {
-                    debugLogger.accept("Maven output: " + line);
-                }
             }
         }
 
