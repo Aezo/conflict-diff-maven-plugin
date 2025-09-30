@@ -153,7 +153,7 @@ class MavenTreeConflictDetectionStrategyTest {
                 .orElse(null);
         assertThat(junitConflict).isNotNull();
         assertThat(junitConflict.getConflicts()).hasSize(1);
-        VersionConflict mergedConflict = junitConflict.getConflicts().iterator().next();
+        VersionConflict mergedConflict = junitConflict.getConflicts().values().iterator().next();
         assertThat(mergedConflict.getCount()).isEqualTo(2); // Should be merged
     }
 
