@@ -122,14 +122,14 @@ public class ConflictDiffMojo extends AbstractMojo {
         }
 
         try {
+            // Register shutdown hook for cleanup
+            registerShutdownHook();
+
             Repository repository = GitRepositoryUtil.getRepository(project.getBasedir());
             git = new Git(repository);
 
             String currentBranch = GitRepositoryUtil.getCurrentBranch(git);
             originalBranch = currentBranch;
-
-            // Register shutdown hook for cleanup
-            registerShutdownHook();
 
             if (currentBranch.equals(baseBranch)) {
                 getLog().info("⏩ Current branch (" + currentBranch + ") is the same as base branch (" + baseBranch
