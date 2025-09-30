@@ -25,11 +25,11 @@ class VersionConflictTest {
 
     @Test
     void testAdd() {
-        VersionConflict result = conflict1.add(conflict2);
+        conflict1.add(conflict2);
 
-        assertThat(result.getPomVersion()).isEqualTo(conflict1.getPomVersion());
-        assertThat(result.getResolvedVersion()).isEqualTo(conflict1.getResolvedVersion());
-        assertThat(result.getCount()).isEqualTo(8); // 5 + 3
+        assertThat(conflict1.getPomVersion()).isEqualTo(conflict1.getPomVersion());
+        assertThat(conflict1.getResolvedVersion()).isEqualTo(conflict1.getResolvedVersion());
+        assertThat(conflict1.getCount()).isEqualTo(8); // 5 + 3
     }
 
     @Test
@@ -96,11 +96,11 @@ class VersionConflictTest {
 
     @Test
     void testSubtract() {
-        VersionConflict result = conflict1.subtract(conflict2);
+        conflict1.subtract(conflict2);
 
-        assertThat(result.getPomVersion()).isEqualTo(conflict1.getPomVersion());
-        assertThat(result.getResolvedVersion()).isEqualTo(conflict1.getResolvedVersion());
-        assertThat(result.getCount()).isEqualTo(2); // 5 - 3
+        assertThat(conflict1.getPomVersion()).isEqualTo(conflict1.getPomVersion());
+        assertThat(conflict1.getResolvedVersion()).isEqualTo(conflict1.getResolvedVersion());
+        assertThat(conflict1.getCount()).isEqualTo(2); // 5 - 3
     }
 
     @Test
@@ -132,9 +132,9 @@ class VersionConflictTest {
 
     @Test
     void testSubtractResultingInNegativeCount() {
-        VersionConflict result = conflict2.subtract(conflict1); // 3 - 5 = -2
+        conflict2.subtract(conflict1); // 3 - 5 = -2
 
-        assertThat(result.getCount()).isEqualTo(-2);
+        assertThat(conflict2.getCount()).isEqualTo(-2);
     }
 
     @Test
