@@ -55,14 +55,9 @@ class DependencyConflictImplTest {
 
         assertThat(dependency1.getArtifactKey()).isEqualTo("com.example:library1");
         assertThat(dependency1.getConflicts()).hasSize(2);
-
-        ComparableVersion mergedVersion = new ComparableVersion("1.0");
         
         // Find the merged version conflict (1.0 -> 1.1)
-        VersionConflict merged = dependency1.getConflicts().values().stream()
-            .filter(vc -> vc.getPomVersion().equals(mergedVersion))
-            .findFirst()
-            .orElse(null);
+        VersionConflict merged = dependency1.getConflicts().get(version1.hashKey());
         
         assertThat(merged).isNotNull();
         assertThat(merged.getCount()).isEqualTo(7); // 5 + 2
@@ -103,26 +98,17 @@ class DependencyConflictImplTest {
         assertThat(current.getConflicts()).hasSize(3);
 
         // Check for increased conflict (1.0 -> 1.1): 5 - 2 = 3
-        VersionConflict increasedConflict = current.getConflicts().values().stream()
-            .filter(vc -> vc.getPomVersion().equals(new ComparableVersion("1.0")))
-            .findFirst()
-            .orElse(null);
+        VersionConflict increasedConflict = current.getConflicts().get(baseVersion1.hashKey());
         assertThat(increasedConflict).isNotNull();
         assertThat(increasedConflict.getCount()).isEqualTo(3);
 
         // Check for new conflict (3.0 -> 3.1): 2
-        VersionConflict newConflict = current.getConflicts().values().stream()
-            .filter(vc -> vc.getPomVersion().equals(new ComparableVersion("3.0")))
-            .findFirst()
-            .orElse(null);
+        VersionConflict newConflict = current.getConflicts().get(currentVersion3.hashKey());
         assertThat(newConflict).isNotNull();
         assertThat(newConflict.getCount()).isEqualTo(2);
 
         // Check for removed conflict (2.0 -> 2.1): -1
-        VersionConflict removedConflict = current.getConflicts().values().stream()
-            .filter(vc -> vc.getPomVersion().equals(new ComparableVersion("2.0")))
-            .findFirst()
-            .orElse(null);
+        VersionConflict removedConflict = current.getConflicts().get(baseVersion2.hashKey());
         assertThat(removedConflict).isNotNull();
         assertThat(removedConflict.getCount()).isEqualTo(-1);
     }
