@@ -274,7 +274,7 @@ public class ConflictDiffMojo extends AbstractMojo {
 
         for (DependencyConflict conflict : conflicts) {
             boolean firstRow = true;
-            for (VersionConflict vc : conflict.getConflicts()) {
+            for (VersionConflict vc : conflict.getConflicts().values()) {
                 String artifactKey = firstRow ? conflict.getArtifactKey() : "";
                 String versionConflict = vc.getPomVersion() + " → " + vc.getResolvedVersion();
                 String conflictTypeIndicator = getConflictTypeIndicator(vc);
@@ -310,7 +310,7 @@ public class ConflictDiffMojo extends AbstractMojo {
         int equalCount = 0;
         
         for (DependencyConflict conflict : conflicts) {
-            for (VersionConflict vc : conflict.getConflicts()) {
+            for (VersionConflict vc : conflict.getConflicts().values()) {
                 int comparison = vc.getPomVersion().compareTo(vc.getResolvedVersion());
                 if (comparison > 0) {
                     downgradeCount++;
@@ -389,7 +389,7 @@ public class ConflictDiffMojo extends AbstractMojo {
             return false;
         }
         
-        return conflict.getConflicts().stream()
+        return conflict.getConflicts().values().stream()
             .anyMatch(vc -> vc.getCount() != 0);
     }
 
