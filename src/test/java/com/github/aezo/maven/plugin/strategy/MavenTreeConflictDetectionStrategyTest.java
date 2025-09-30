@@ -36,7 +36,7 @@ class MavenTreeConflictDetectionStrategyTest {
 
     @BeforeEach
     void setUp() {
-        strategy = new MavenTreeConflictDetectionStrategy(mockProject, mockDebugLogger);
+        strategy = new MavenTreeConflictDetectionStrategy(mockProject, null, mockDebugLogger);
     }
 
     @Test
