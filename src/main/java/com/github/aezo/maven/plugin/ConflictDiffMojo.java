@@ -159,11 +159,11 @@ public class ConflictDiffMojo extends AbstractMojo {
 
         } catch (Exception e) {
             // Ensure cleanup happens even if there's an exception
-            cleanup();
+            cleanup("exception");
             throw new MojoExecutionException("❌ Failed to analyze dependency conflicts", e);
         } finally {
             // Always try to cleanup on normal execution
-            cleanup();
+            cleanup("normal execution");
         }
     }
 
@@ -173,7 +173,7 @@ public class ConflictDiffMojo extends AbstractMojo {
     private void registerShutdownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             debugLog("⚠️  Plugin interrupted, performing cleanup...");
-            cleanup();
+            cleanup("plugin interrupted");
         }));
     }
 
@@ -181,7 +181,8 @@ public class ConflictDiffMojo extends AbstractMojo {
      * Performs cleanup by checking out the original branch if needed.
      * This method is safe to call multiple times and handles all exceptions gracefully.
      */
-    private void cleanup() {
+    private void cleanup(String cleanupReason) {
+        debugLog("⏳ Clean up reason: " + cleanupReason);
         if (git == null || originalBranch == null) {
             return;
         }
