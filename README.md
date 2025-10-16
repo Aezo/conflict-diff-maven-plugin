@@ -169,28 +169,42 @@ The plugin provides clear, actionable output:
 
 ### Sample Output
 
-#### When No Differences Found
+#### When No Conflicts Found
 ```
-[INFO] Analyzing dependency conflicts between 'develop' and 'feature-branch'
-[INFO] ✅ No differences in dependency conflicts found between branches
-```
-
-#### When Differences Are Found
-```
-[INFO] Analyzing dependency conflicts between 'develop' and 'feature-branch'
-[INFO] ⚠️ Differences in dependency conflicts found between branches:
-[INFO] 
-[INFO] Removed conflicts (2 conflicts resolved):
-[INFO]   - com.example:library-a:jar:1.0.0:compile conflict with 2.0.0
-[INFO]   - com.google:guava:jar:20.0:compile conflict with 30.1-jre
-[INFO] 
-[INFO] Added conflicts (3 new conflicts introduced):
-[INFO]   + com.example:library-b:jar:1.5.0:compile conflict with 1.4.0
-[INFO]   + org.springframework:spring-core:jar:5.3.0:compile conflict with 5.2.8.RELEASE
-[INFO]   + junit:junit:jar:4.13:test conflict with 4.12
+[INFO] ⏳ Analyzing dependency conflicts between 'develop' and 'feature-branch'
+[INFO] 🎉 No new conflicts found in feature branch!
 ```
 
-This output shows that 2 dependency conflicts were resolved (`library-a` and `guava`) while 3 new conflicts were introduced (`library-b`, `spring-core`, and `junit`) in the feature branch compared to the base branch.
+#### When Conflicts Are Found
+```
+[INFO] ⏳ Analyzing dependency conflicts between 'develop' and 'feature-branch'
+[INFO] ⚠️  Transitive dependency conflict differences found between branches:
+[INFO] 
+[INFO] ✅ RESOLVED CONFLICTS (present in base branch but not in current branch):
+[INFO] ┌─────────────────────────────────────┬──────────────────────┬──────────────┬───────┐
+[INFO] │ARTIFACT                             │VERSION CONFLICT      │TYPE          │COUNT  │
+[INFO] ├─────────────────────────────────────┼──────────────────────┼──────────────┼───────┤
+[INFO] │com.example:library-a:jar:compile    │1.0.0 → 2.0.0         │🔺 UPGRADE    │3      │
+[INFO] │com.google:guava:jar:compile         │20.0 → 30.1-jre       │🔺 UPGRADE    │1      │
+[INFO] └─────────────────────────────────────┴──────────────────────┴──────────────┴───────┘
+[INFO]    🔺 2 upgrades
+[INFO]    ✨ Upgrades generally provide bug fixes and new features
+[INFO] 
+[INFO] ❌ NEW CONFLICTS (present in current branch but not in base branch):
+[INFO] ┌─────────────────────────────────────┬──────────────────────┬──────────────┬───────┐
+[INFO] │ARTIFACT                             │VERSION CONFLICT      │TYPE          │COUNT  │
+[INFO] ├─────────────────────────────────────┼──────────────────────┼──────────────┼───────┤
+[INFO] │com.example:library-b:jar:compile    │1.5.0 → 1.4.0         │🔻 DOWNGRADE  │2      │
+[INFO] │org.springframework:spring-core:jar  │5.3.0 → 5.2.8.RELEASE │🔻 DOWNGRADE  │1      │
+[INFO] │junit:junit:jar:test                 │4.13 → 4.12           │🔻 DOWNGRADE  │1      │
+[INFO] └─────────────────────────────────────┴──────────────────────┴──────────────┴───────┘
+[INFO]    🔻 3 downgrades
+[INFO]    ⚠️  Downgrades may indicate missing features or potential compatibility issues
+[INFO] 
+[INFO] 📋 SUMMARY: 2 resolved, 3 new, 0 changed
+```
+
+This output shows that 2 dependency conflicts were resolved (meaning dependencies that had conflicts in the base branch no longer have conflicts in the current branch), while 3 new conflicts were introduced in the feature branch. The plugin categorizes version changes as upgrades (🔺) or downgrades (🔻) and provides contextual information about their potential impact.
 
 ## Alternative Tools
 
