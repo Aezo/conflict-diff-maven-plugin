@@ -160,16 +160,6 @@ mvn conflict-diff:analyze
 | `debug`      | `conflict-diff.debug`      | `false`   | Enable debug output                |
 | `skip`       | `conflict-diff.skip`       | `false`   | Skip plugin execution              |
 
-## How It Works
-
-1. **Branch Validation**: Ensures the current branch is different from the base branch
-2. **Git Integration**: Uses JGit to programmatically switch between branches
-3. **Base Branch Analysis**: Switches to the base branch and builds dependency graph using Maven Resolver APIs
-4. **Feature Branch Analysis**: Switches back to the feature branch and builds dependency graph using Maven Resolver APIs
-5. **Conflict Detection**: Analyzes dependency graphs to identify version conflicts and omitted transitive dependencies
-6. **Comparison**: Compares the two conflict lists and reports differences
-7. **Cleanup**: Automatically restores the original branch
-
 ## Output
 
 The plugin provides clear, actionable output:
