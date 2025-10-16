@@ -101,45 +101,21 @@ For detailed output examples and explanations, see [PLUGIN-USAGE.md](PLUGIN-USAG
 
 ### Bash Script (mvn-conflict-diff)
 
-For users who prefer a standalone command-line tool or cannot use the Maven plugin, this repository also includes a bash script (`scripts/mvn-conflict-diff`) that provides similar functionality.
+For users who prefer a standalone command-line tool or cannot use the Maven plugin, this repository also includes a bash script that provides similar functionality.
 
-#### Requirements
-- Git repository
-- Maven project with `pom.xml`
-- `mvn` command available in PATH
-- Bash shell (macOS/Linux)
+📖 **[Complete bash script documentation →](scripts/mvn-conflict-diff.md)**
 
-#### Installation
+**Quick Start:**
 ```bash
-# Make the script executable
+# Make executable and run
 chmod +x scripts/mvn-conflict-diff
 
 # (Optional) Add to your PATH for global access
 export PATH="$PATH:/path/to/conflict-diff-maven-plugin/scripts"
-```
 
-#### Usage
-```bash
-# Compare current branch against 'develop' (default)
+# Run the script
 mvn-conflict-diff
-
-# Compare current branch against 'master'
-mvn-conflict-diff master
-
-# Compare against 'master' with debug output
-mvn-conflict-diff master --debug
-
-# Show help
-mvn-conflict-diff --help
 ```
-
-#### Migration from Bash Script to Maven Plugin
-
-| Bash Script                          | Maven Plugin                                                                             |
-|--------------------------------------|------------------------------------------------------------------------------------------|
-| `./mvn-conflict-diff`                | `mvn conflict-diff:analyze`                                                              |
-| `./mvn-conflict-diff master`         | `mvn conflict-diff:analyze -Dconflict-diff.baseBranch=master`                            |
-| `./mvn-conflict-diff master --debug` | `mvn conflict-diff:analyze -Dconflict-diff.baseBranch=master -Dconflict-diff.debug=true` |
 
 ## Integration Examples
 
