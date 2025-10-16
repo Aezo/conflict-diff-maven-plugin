@@ -1,190 +1,102 @@
 # Maven Dependency Conflict Analyzer Plugin
 
-A Maven plugin that compares dependency conflicts between Git branches to help identify dependency changes introduced by feature branches.
+🔍 Compare Maven dependency conflicts between Git branches to identify changes introduced by feature branches.
 
-## Table of Contents
+## Overview
 
-- [Description](#description)
-- [Features](#features)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Output](#output)
-- [Alternative Tools](#alternative-tools)
-- [Integration Examples](#integration-examples)
-- [Contributing](#contributing)
-- [Troubleshooting](#troubleshooting)
-- [License](#license)
+This plugin analyzes how your feature branch changes affect Maven dependency resolution by comparing conflicts between your current branch and a base branch. Perfect for understanding dependency impacts before merging.
 
-## Description
+**Key Benefits:**
+- 🌿 **Branch Comparison** - Compare conflicts between any two branches  
+- 📊 **Detailed Analysis** - Shows conflict counts and details
+- 🚀 **CI/CD Ready** - Easy integration with build pipelines
+- ⚙️ **Configurable** - Flexible configuration options
 
-This Maven plugin helps developers understand how their feature branch changes affect Maven dependency resolution by comparing dependency conflicts between the current branch and a base branch (typically `develop` or `master`). It provides detailed dependency conflict analysis that can be run on-demand or configured to run as part of your build process.
+## Quick Start
 
-## Features
+**Prerequisites:** Java 8+, Maven 3.6.3+, Git repository
 
-- 🔌 **Maven Integration**: Native Maven plugin that can be invoked directly
-- 🔍 **Conflict Detection**: Identifies Maven dependency conflicts using internal Maven dependency resolution APIs
-- 🌿 **Branch Comparison**: Compares dependency conflicts between any two Git branches
-- 📊 **Detailed Analysis**: Shows count and details of each conflict type
-- ⚙️ **Configurable**: Flexible configuration through Maven properties or pom.xml
-- 🐛 **Debug Mode**: Optional verbose output for troubleshooting
-- 🚀 **CI/CD Ready**: Easy integration with continuous integration pipelines
+1. **Install the plugin:**
+   ```bash
+   git clone https://github.com/aezo/conflict-diff-maven-plugin.git
+   cd conflict-diff-maven-plugin
+   mvn clean install
+   ```
 
-## Requirements
+2. **Run analysis in your project:**
+   ```bash
+   cd /path/to/your/maven/project
+   mvn com.github.aezo:conflict-diff-maven-plugin:1.0.0-SNAPSHOT:analyze -Dconflict-diff.baseBranch=main
+   ```
 
-- **Java 8+**: Required for running the Maven plugin
-- **Maven 3.6.3+**: Required for Maven plugin functionality
-- **Git repository**: Project must be a Git repository for branch comparison
-- **Maven project**: Must have a valid `pom.xml` file with dependencies
+3. **Optional - Add plugin group to `~/.m2/settings.xml` for shorter commands:**
+   ```xml
+   <pluginGroups>
+      <pluginGroup>com.github.aezo</pluginGroup>
+   </pluginGroups>
+   ```
+   Then use: `mvn conflict-diff:analyze -Dconflict-diff.baseBranch=main`
 
-## Installation
+## Usage Examples
 
-See [PLUGIN-USAGE.md](PLUGIN-USAGE.md#installation) for detailed installation instructions.
-
-## Usage
-
-### Quick Start for Local Development
-
-After installing the plugin locally, here's how to run your first analysis:
-
+### Basic Commands
 ```bash
-# 1. Clone and install the plugin (one-time setup)
-git clone https://github.com/aezo/conflict-diff-maven-plugin.git
-cd conflict-diff-maven-plugin
-mvn clean install
+# Compare current branch with main
+mvn conflict-diff:analyze -Dconflict-diff.baseBranch=main
 
-# 2. Navigate to your project
-cd /path/to/your/maven/project
+# Enable debug output
+mvn conflict-diff:analyze -Dconflict-diff.debug=true
 
-# 3. Run the analysis using full coordinates (recommended for local use)
-mvn com.github.aezo:conflict-diff-maven-plugin:1.0.0-SNAPSHOT:analyze -Dconflict-diff.baseBranch=main
-
-# 4. (Optional) Configure Maven settings for shorter commands
-# Add com.github.aezo to pluginGroups in ~/.m2/settings.xml, then use:
-# mvn conflict-diff:analyze -Dconflict-diff.baseBranch=main
-```
-
-For detailed usage instructions, configuration options, and examples, see [PLUGIN-USAGE.md](PLUGIN-USAGE.md).
-
-### Multi-Module Projects
-
-For multi-module Maven projects, you can target specific modules:
-
-```bash
-# Run on a specific module only
-mvn conflict-diff:analyze -pl your-module-name
-
-# Run on multiple specific modules
+# Multi-module projects - specific modules
 mvn conflict-diff:analyze -pl module1,module2
-
-# Run on all modules except one
-mvn conflict-diff:analyze -pl !module-to-skip
-
-# Combine with other parameters
-mvn conflict-diff:analyze -pl your-module-name -Dconflict-diff.baseBranch=master
 ```
 
-Alternatively, you can navigate to the specific module directory:
+### Configuration Options
+- `baseBranch` - Branch to compare against (default: `develop`)
+- `debug` - Enable verbose output (default: `false`)
+- `skipConflictDiff` - Skip plugin execution (default: `false`)
 
+**💡 For detailed configuration, examples, and CI/CD integration:** [PLUGIN-USAGE.md](PLUGIN-USAGE.md)
+
+## Alternative: Bash Script
+
+Prefer command-line tools? Use the included bash script:
 ```bash
-# Navigate to the module and run from there
-cd your-specific-module/
-mvn conflict-diff:analyze
-```
-
-
-## Output
-
-For detailed output examples and explanations, see [PLUGIN-USAGE.md](PLUGIN-USAGE.md#output).
-
-## Alternative Tools
-
-### Bash Script (mvn-conflict-diff)
-
-For users who prefer a standalone command-line tool or cannot use the Maven plugin, this repository also includes a bash script that provides similar functionality.
-
-📖 **[Complete bash script documentation →](scripts/mvn-conflict-diff.md)**
-
-**Quick Start:**
-```bash
-# Make executable and run
 chmod +x scripts/mvn-conflict-diff
-
-# (Optional) Add to your PATH for global access
-export PATH="$PATH:/path/to/conflict-diff-maven-plugin/scripts"
-
-# Run the script
+export PATH="${PATH}:/path/to/scripts/mvn-conflict-diff"
 mvn-conflict-diff
 ```
+📖 [Script documentation](scripts/mvn-conflict-diff.md)
 
-## Integration Examples
+## Common Issues
 
-For CI/CD pipeline integration examples and Maven lifecycle binding, see [PLUGIN-USAGE.md](PLUGIN-USAGE.md#cicd-integration).
-
-## Contributing
-
-We welcome contributions! Please follow these steps:
-
-1. **Fork the repository** on GitHub
-2. **Create your feature branch** (`git checkout -b feature/amazing-feature`)
-3. **Make your changes** and add tests if applicable
-4. **Commit your changes** (`git commit -m 'Add some amazing feature'`)
-5. **Push to the branch** (`git push origin feature/amazing-feature`)
-6. **Open a Pull Request** with a clear description of your changes
-
-### Development Setup
-
-```bash
-# Clone your fork
-git clone https://github.com/your-username/conflict-diff-maven-plugin.git
-cd conflict-diff-maven-plugin
-
-# Build and test
-mvn clean compile test
-
-# Install to local repository for testing
-mvn clean install
-```
-
-### Running Tests
-
-```bash
-# Run unit tests
-mvn test
-
-# Run integration tests (if available)
-mvn verify
-```
-
-## Troubleshooting
-
-For basic troubleshooting steps, see [PLUGIN-USAGE.md](PLUGIN-USAGE.md#troubleshooting).
-
-### Additional Common Issues
-
-#### Plugin Prefix Not Recognized
-```
-[ERROR] No plugin found for prefix 'conflict-diff' in the current project
-```
-
-**Solution 1**: Use the full plugin coordinates:
+**Plugin not found?** Use full coordinates:
 ```bash
 mvn com.github.aezo:conflict-diff-maven-plugin:1.0.0-SNAPSHOT:analyze
 ```
 
-**Solution 2**: Add the plugin group to your Maven settings (`~/.m2/settings.xml`):
-```xml
-<pluginGroups>
-   <pluginGroup>com.github.aezo</pluginGroup>
-</pluginGroups>
-```
-
-#### Branch Does Not Exist
-The plugin defaults to comparing against the `develop` branch. If your repository uses a different default branch (like `main` or `master`), specify it:
+**Wrong default branch?** Specify your branch:
 ```bash
 mvn conflict-diff:analyze -Dconflict-diff.baseBranch=main
 ```
 
+💡 **More troubleshooting:** [PLUGIN-USAGE.md](PLUGIN-USAGE.md#troubleshooting)
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`) 
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+**Development:**
+```bash
+git clone https://github.com/your-username/conflict-diff-maven-plugin.git
+cd conflict-diff-maven-plugin
+mvn clean install
+```
+
 ## License
 
-This project is licensed under the terms specified in the [LICENSE](LICENSE) file.
+Licensed under the terms in [LICENSE](LICENSE) file.
